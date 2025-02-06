@@ -23,7 +23,7 @@ COPY --from=builder /app/out /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/nginx.conf
 
 # เปิดพอร์ต 80
-EXPOSE 80
+EXPOSE 4746
 
 # รัน Nginx
 CMD ["nginx", "-g", "daemon off;"]
