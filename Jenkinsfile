@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git branch: 'main', credentialsId: 'your-credentials-id', url: 'https://github.com/your-repo.git'
+                git branch: 'main', credentialsId: 'your-credentials-id', url: 'https://github.com/MangPong/nextjs-jenkins.git'
             }
         }
 
