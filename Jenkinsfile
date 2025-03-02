@@ -1,25 +1,51 @@
 pipeline {
     agent any
-    stages {      
-        stage("Copy file to Docker server"){
+
+    environment {
+        IMAGE_NAME = "my-next-app"
+        CONTAINER_NAME = "next-app"
+        DOCKER_REPO = "your-docker-hub-username"
+    }
+
+    stages {
+        stage('Checkout') {
             steps {
-				//แก้ตรง team33-neogym ให้เป็นชื่อเดียวกับ pipeline job/item ที่สร้างใน jenkins
-                sh "scp -r /var/lib/jenkins/workspace/66026178/* root@43.208.241.236:~/66026178"
+                git branch: 'main', credentialsId: 'your-credentials-id', url: 'https://github.com/your-repo.git'
             }
         }
-        
-        stage("Build Docker Image") {
+
+        stage('Install Dependencies') {
             steps {
-                //path yaml files
-				ansiblePlaybook playbook: '/var/lib/jenkins/workspace/66026178/playbooks/build.yaml'
-            }    
-        } 
-        
-        stage("Create Docker Container") {
+                sh 'npm install'
+            }
+        }
+
+        stage('Build Next.js') {
             steps {
-                //path yaml files
-				ansiblePlaybook playbook: '/var/lib/jenkins/workspace/66026178/playbooks/deploy.yaml'
-            }    
-        } 
+                sh 'npm run build'
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                sh '''
+                docker build -t $DOCKER_REPO/$IMAGE_NAME:latest .
+                docker login -u $DOCKER_REPO -p your-docker-hub-password
+                docker push $DOCKER_REPO/$IMAGE_NAME:latest
+                '''
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                sh '''
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                docker pull $DOCKER_REPO/$IMAGE_NAME:latest
+                docker run -d --name $CONTAINER_NAME -p 3000:3000 $DOCKER_REPO/$IMAGE_NAME:latest
+                '''
+            }
+        }
     }
 }
+
